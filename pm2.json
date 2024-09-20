@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "name": "theborges-app",
+      "script": "pnpm",
+      "args": "start"
+    }
+  ]
+}
