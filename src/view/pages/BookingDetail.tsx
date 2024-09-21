@@ -1,62 +1,50 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { IBooking } from '@/app/entities/IBooking';
+import { useBookings } from '@/app/hooks/useBookings';
 import dayLib from '@/app/lib/dayjs';
-import { BookingService } from '@/app/services/BookingService';
-
-import { Button } from '../components/ui/Button';
-import { Skeleton } from '../components/ui/Skeleton';
+import { CancelledBookingAlertDialog } from '@/view/components/CancelledBookingAlertDialog';
+import { Button } from '@/view/components/ui/Button';
+import { Skeleton } from '@/view/components/ui/Skeleton';
 
 export function BookingDetail() {
   const { id } = useParams();
-  const [loading, setLoading] = useState(true);
-  const [bookingData, setBookingData] = useState<IBooking>();
+  const { booking, bookingLoading, updateLoading, setBookingId } = useBookings();
   const navigate = useNavigate();
 
-  const onClickCancelled = (bookingId: number) => {
-    setLoading(true);
-    BookingService.update({ id: bookingId, status: 'CANCELLED' })
-      .then((res) => setBookingData(res))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    if (id) {
-      BookingService.get(id)
-        .then((res) => setBookingData(res))
-        .catch(() => navigate('/'))
-        .finally(() => setLoading(false));
-    } else {
-      navigate('/');
+  const loading = useMemo(() => {
+    if (bookingLoading || updateLoading) {
+      return true;
     }
-  }, [id, navigate]);
+
+    return false;
+  }, [bookingLoading, updateLoading]);
 
   const isBefore = useMemo(() => {
-    if (bookingData) {
-      const startDateTime = dayLib(bookingData.date)
+    if (booking) {
+      const startDateTime = dayLib(booking.date)
         .startOf('day')
-        .add(bookingData.startTime, 'm');
+        .add(booking.startTime, 'm');
 
       const now = dayLib();
 
       if (
         startDateTime.isBefore(now, 'minute') ||
-        bookingData.status === 'CANCELLED' ||
-        bookingData.status === 'RESCHEDULED'
+        booking.status === 'CANCELLED' ||
+        booking.status === 'RESCHEDULED'
       ) {
         return true;
       }
     }
+
     return false;
-  }, [bookingData]);
+  }, [booking]);
 
   const hour = useMemo(() => {
-    if (bookingData) {
-      const startDateTime = dayLib(bookingData.date)
+    if (booking) {
+      const startDateTime = dayLib(booking.date)
         .startOf('day')
-        .add(bookingData.startTime, 'm');
+        .add(booking.startTime, 'm');
 
       const now = dayLib();
 
@@ -76,20 +64,26 @@ export function BookingDetail() {
       return `${startDateTime.format('DD/MM/YYYY')} às ${startDateTime.format('HH:mm')}`;
     }
     return '';
-  }, [bookingData]);
+  }, [booking]);
 
   let totalPrice = 0;
+
+  useEffect(() => {
+    if (id) {
+      setBookingId(id);
+    } else {
+      navigate('/');
+    }
+  }, [id, navigate, setBookingId]);
 
   return loading ? (
     <Skeleton className="h-[40px] w-full rounded-xl" />
   ) : (
-    bookingData && (
+    booking && (
       <div className="flex flex-col justify-center mx-auto max-w-[480px] p-6">
         <div className="mb-4">
           <strong>Cliente:</strong>{' '}
-          {bookingData.forPersonName
-            ? bookingData.forPersonName
-            : bookingData.client.name}
+          {booking.forPersonName ? booking.forPersonName : booking.client.name}
         </div>
         <div className="mb-4">
           <strong>Data e Hora:</strong> {hour}
@@ -98,7 +92,7 @@ export function BookingDetail() {
         <div className="mb-4">
           <strong>Serviços Selecionados:</strong>
           <ul className="list-disc list-inside">
-            {bookingData.services.map((service) => {
+            {booking.services.map((service) => {
               totalPrice += service.price;
               return (
                 <li key={service.service.name}>
@@ -126,7 +120,7 @@ export function BookingDetail() {
           <strong>Status:</strong>{' '}
           <span className="font-semibold">
             {(() => {
-              switch (bookingData.status) {
+              switch (booking.status) {
                 case 'CANCELLED':
                   return 'Cancelado';
                 case 'RESCHEDULED':
@@ -143,23 +137,16 @@ export function BookingDetail() {
         </div>
         {isBefore ? (
           <Button variant="secondary" asChild>
-            <Link to={`/c/${bookingData.client.publicId}`}>Voltar</Link>
+            <Link to={`/c/${booking.client.publicId}`}>Voltar</Link>
           </Button>
         ) : (
           <div className="flex flex-col gap-2">
             <Button variant="default" asChild>
-              <Link to={`/b/${bookingData.publicId}`}>Reagendar</Link>
+              <Link to={`/b/${booking.publicId}`}>Reagendar</Link>
             </Button>
-            <Button
-              onClick={() => {
-                onClickCancelled(bookingData.id);
-              }}
-              variant="destructive"
-            >
-              Cancelar
-            </Button>
+            <CancelledBookingAlertDialog bookingId={booking.id} />
             <Button variant="secondary" asChild>
-              <Link to={`/c/${bookingData.client.publicId}`}>Voltar</Link>
+              <Link to={`/c/${booking.client.publicId}`}>Voltar</Link>
             </Button>
           </div>
         )}
