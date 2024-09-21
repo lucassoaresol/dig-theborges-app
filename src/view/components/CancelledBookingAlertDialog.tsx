@@ -20,12 +20,14 @@ interface ICancelledBookingAlertDialog {
 export function CancelledBookingAlertDialog({
   bookingId,
 }: ICancelledBookingAlertDialog) {
-  const { update, setBookingId } = useBookings();
+  const { update, updateLoading } = useBookings();
 
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive">Cancelar Agendamento</Button>
+        <Button variant="destructive" disabled={updateLoading}>
+          Cancelar Agendamento
+        </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -38,10 +40,7 @@ export function CancelledBookingAlertDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Voltar</AlertDialogCancel>
           <AlertDialogAction
-            onClick={() => {
-              setBookingId(String(bookingId));
-              update({ id: bookingId, status: 'CANCELLED' });
-            }}
+            onClick={() => update({ id: bookingId, status: 'CANCELLED' })}
           >
             Confirmar Cancelamento
           </AlertDialogAction>

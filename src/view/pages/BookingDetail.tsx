@@ -9,16 +9,8 @@ import { Skeleton } from '@/view/components/ui/Skeleton';
 
 export function BookingDetail() {
   const { id } = useParams();
-  const { booking, bookingLoading, updateLoading, setBookingId } = useBookings();
+  const { booking, bookingLoading, setBookingId } = useBookings();
   const navigate = useNavigate();
-
-  const loading = useMemo(() => {
-    if (bookingLoading || updateLoading) {
-      return true;
-    }
-
-    return false;
-  }, [bookingLoading, updateLoading]);
 
   const isBefore = useMemo(() => {
     if (booking) {
@@ -76,7 +68,7 @@ export function BookingDetail() {
     }
   }, [id, navigate, setBookingId]);
 
-  return loading ? (
+  return bookingLoading ? (
     <Skeleton className="h-[40px] w-full rounded-xl" />
   ) : (
     booking && (
