@@ -9,7 +9,7 @@ export function useBookings() {
 
   const { data: booking, isFetching: bookingLoading } = useQuery({
     queryKey: ['booking', bookingId!],
-    queryFn: BookingService.get,
+    queryFn: BookingService.getByPublicId,
     refetchInterval: Infinity,
     enabled: !!bookingId,
   });

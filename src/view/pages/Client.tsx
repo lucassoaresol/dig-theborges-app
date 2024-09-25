@@ -40,7 +40,7 @@ export function Client() {
   useEffect(() => {
     setLoading(true);
     if (id) {
-      ClientService.get(id)
+      ClientService.getByPublicId(id)
         .then((res) => {
           form.setValue('confirmedStep.clientId', res.id);
           form.setValue('confirmedStep.clientName', res.name);
