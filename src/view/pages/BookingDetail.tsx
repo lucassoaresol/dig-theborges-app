@@ -121,6 +121,8 @@ export function BookingDetail() {
                   return 'Confirmado';
                 case 'COMPLETED':
                   return 'Concluído';
+                case 'NO_SHOW':
+                  return 'Não Compareceu';
                 default:
                   return 'Desconhecido';
               }
